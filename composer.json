@@ -1,0 +1,20 @@
+{
+    "name": "vitormattos/php-telegram",
+    "description": "Client for Telegram in PHP",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Vitor Mattos",
+            "email": "vitor.mattos@phprio.org"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "PhpTelegram\\": "src"
+        }
+    },
+    "require": {
+        "zyberspace/telegram-cli-client": "dev-master"
+    }
+}

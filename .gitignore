@@ -1,0 +1,11 @@
+# Composer
+/vendor/
+*.lock
+
+# Eclipse
+.buildpath
+.project
+.settings
+
+# VI
+*.swp
