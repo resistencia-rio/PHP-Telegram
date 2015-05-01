@@ -44,37 +44,75 @@ height: 250px;
 <br />
 <?php
 switch($action) {
+    case 'del-contact':
+        $telegram->delContact(base64_decode($_GET['user']));
+        break;
     case 'user-list':
-        $users = $telegram->getContactList('User');
+        $users = $telegram->getContactList();
         foreach($users as $name) {
-            echo $name.'<br />';
+            echo $name.
+                ' <a href="?action=edit-contact&contact='.base64_encode($name).'">edit</a>'.
+                ' <a href="?action=del-contact&user='.base64_encode($name).'">del</a><br />';
         }
         break;
     case 'user-create':
         if(count($_POST)) {
-            return;
+            $telegram->addContact(
+                $_POST['phoneNumber'],
+                $_POST['firstName'],
+                $_POST['lastName']
+            );
         }
         echo '<form method="post">';
-        echo 'Nome: <input type="text" name="name"><br />';
-        echo 'Sobenome: <input type="text" name="lastname"><br />';
-        echo 'Telefone: <input type="text" name="phone"><br />';
+        echo 'Nome: <input type="text" name="firstName"><br />';
+        echo 'Sobenome: <input type="text" name="lastName"><br />';
+        echo 'Telefone: <input type="text" name="phoneNumber"><br />';
         ?><input type="submit">
-        </select>
+        </form><?php
+        break;
+    case 'edit-contact':
+        if(count($_POST)) {
+            $telegram->renameContact(
+                base64_decode($_POST['contact']),
+                $_POST['firstName'],
+                $_POST['lastName']
+            );
+        }
+        echo '<form method="post">';
+        echo '<input type="hidden" name="contact" value="'.$_GET['contact'].'"><br />';
+        $contact = base64_decode($_GET['contact']);
+        $contact = array(
+            substr($contact, 0, strpos($contact, ' ')),
+            substr($contact, strpos($contact, ' '))
+        );
+        echo 'Nome: <input type="text" name="firstName" value="'.$contact[0].'"><br />';
+        echo 'Sobenome: <input type="text" name="lastName" value="'.$contact[1].'"><br />';
+        ?><input type="submit">
         </form><?php
         break;
     case 'group-create':
         if(count($_POST)) {
-            return;
+            $telegram->createGroupChat($_POST['chat'], $_POST['users']);
         }
         echo '<form method="post">';
-        echo 'Nome: <input type="text" name="name"><br />';
-        ?>Usuários: <select id="user" name="user" multiple><?php
+        echo 'Nome: <input type="text" name="chat"><br />';
+        ?>Usuários: <select id="users" name="users[]" multiple><?php
         $users = $telegram->getContactList('User');
         foreach($users as $name) {
-            echo '<option value="'.md5($name).'">'.$name.'</option>';
+            echo '<option value="'.$name.'">'.$name.'</option>';
         }
         ?></select>
         <input type="submit">
+        </form><?php
+        break;
+    case 'group-rename':
+        if(isset($_POST['new'])) {
+            $telegram->renameChat($_POST['current'], $_POST['new']);
+        }
+        echo '<form method="post">';
+        echo '<input type="hidden" name="current" value="'.base64_decode($_GET['group']).'"><br />';
+        echo 'Nome: <input type="text" name="new"><br />';
+        ?><input type="submit">
         </form><?php
         break;
     case 'group-user-add':
@@ -120,8 +158,9 @@ switch($action) {
         $chats = $telegram->getDialogList();
         foreach($chats as $name) {
             echo $name;
-            echo '<a href="?action=group-user-add&group='.trim(base64_encode($name),'=').'">add user</a> | ';
-            echo '<a href="?action=group-user-remove&group='.trim(base64_encode($name),'=').'">remove user</a><br />';
+            echo ' <a href="?action=group-user-add&group='.trim(base64_encode($name),'=').'">add user</a> | ';
+            echo '<a href="?action=group-user-remove&group='.trim(base64_encode($name),'=').'">remove user</a> | ';
+            echo '<a href="?action=group-rename&group='.trim(base64_encode($name),'=').'">rename group</a><br />';
         }
         break;
     case 'group-list':

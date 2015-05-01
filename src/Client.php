@@ -38,4 +38,33 @@ class Client extends \Zyberspace\Telegram\Cli\Client{
         }
         return $return;
     }
+
+    /**
+     * Delete a user from the contact list
+     *
+     * @param string $nameame The name of the new contact
+     *
+     * @return boolean true on success, false otherwise
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     */
+    public function delContact($name)
+    {
+        return $this->exec('del_contact ' . $this->escapePeer($name));
+    }
+
+    public function createGroupChat($chat, $users)
+    {
+        foreach($users as $key => $user) {
+            $users[$key] =$this->escapePeer($user);
+        }
+        return $this->exec('create_group_chat ' . $this->escapePeer($chat) .
+            ' '  . \implode(' ', $users));
+    }
+
+    public function renameChat($current, $new)
+    {
+        return $this->exec('rename_chat ' . $this->escapePeer($current). ' ' . $this->escapeStringArgument($new));
+    }
 }
