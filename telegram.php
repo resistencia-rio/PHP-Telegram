@@ -13,18 +13,129 @@
  Text Domain: telegramclient
  */
 
-return;
 use PhpTelegram\Client;
 require('vendor/autoload.php');
 $telegram = new Client('tcp://localhost:2015');
 
-?>Selecione um grupo para administrar:
-<select><?php
-$chats = $telegram->getContactList('Chat');
-foreach($chats as $user) {
-    echo '<option>'.$user.'</option>';
+$action = $_GET['action'];
+
+?><html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script>
+jQuery(document).ready(function(){
+	jQuery('#group').change(function(){
+	    window.location = window.location.href.split("?")[0]+'?group='+$(this).val();
+	});
+});
+</script>
+<style>
+select{
+height: 250px;
 }
-?></select><?php
+</style>
+</head>
+<body>
+<a href="?action=group-create">Criar grupo</a> |
+<a href="?action=group-list">Listar grupos</a> |
+<a href="?action=user-create">Adicionar contato</a> |
+<a href="?action=user-list">Listar contatos</a>
+<br />
+<?php
+switch($action) {
+    case 'user-list':
+        $users = $telegram->getContactList('User');
+        foreach($users as $name) {
+            echo $name.'<br />';
+        }
+        break;
+    case 'user-create':
+        if(count($_POST)) {
+            return;
+        }
+        echo '<form method="post">';
+        echo 'Nome: <input type="text" name="name"><br />';
+        echo 'Sobenome: <input type="text" name="lastname"><br />';
+        echo 'Telefone: <input type="text" name="phone"><br />';
+        ?><input type="submit">
+        </select>
+        </form><?php
+        break;
+    case 'group-create':
+        if(count($_POST)) {
+            return;
+        }
+        echo '<form method="post">';
+        echo 'Nome: <input type="text" name="name"><br />';
+        ?>Usuários: <select id="user" name="user" multiple><?php
+        $users = $telegram->getContactList('User');
+        foreach($users as $name) {
+            echo '<option value="'.md5($name).'">'.$name.'</option>';
+        }
+        ?></select>
+        <input type="submit">
+        </form><?php
+        break;
+    case 'group-user-add':
+        if(count($_POST)) {
+            $telegram->chatAddUser(base64_decode($_GET['group']), base64_decode($_POST['user']));
+        }
+        echo '<strong>Grupo:</strong> '.base64_decode($_GET['group']).'<br />';
+        echo '<form method="post">';
+        ?>Usuários: <select id="user" name="user" multiple><?php
+        $users = $telegram->getContactList();
+        foreach($users as $name) {
+            echo '<option value="'.base64_encode($name).'">'.$name.'</option>';
+        }
+        ?></select>
+        <br /><input type="submit">
+        </form><?php
+        $users = $telegram->chatInfo(base64_decode($_GET['group']));
+        foreach($users as $name) {
+            echo $name['name'].' invited by '.$name['by'].' at '.$name['at'].' '.($name['admin']?' ADMIN':'').'<br />';
+        }
+        break;
+    case 'group-user-remove':
+        if(isset($_GET['user'])) {
+            $telegram->chatDelUser(base64_decode($_GET['group']), base64_decode($_GET['user']));
+        }
+        echo '<strong>Grupo:</strong> '.base64_decode($_GET['group']).'<br />';
+        echo '<form method="post">';
+        ?>Usuários:<br /><?php
+        $users = $telegram->getContactList('User');
+        $users = $telegram->chatInfo(base64_decode($_GET['group']));
+        foreach($users as $name) {
+            echo $name['name'].' invited by '.$name['by'].' at '.$name['at'].' '.
+                ($name['admin']?
+                    :'<a href="?action=group-user-remove&group='.$_GET['group'].
+                        '&user='.base64_encode($name['name']).'">remove</a>'
+                ).'<br />';
+        }
+        ?></select>
+        <br /><input type="submit">
+        </form><?php
+        break;
+    case 'group-list':
+        $chats = $telegram->getDialogList();
+        foreach($chats as $name) {
+            echo $name;
+            echo '<a href="?action=group-user-add&group='.trim(base64_encode($name),'=').'">add user</a> | ';
+            echo '<a href="?action=group-user-remove&group='.trim(base64_encode($name),'=').'">remove user</a><br />';
+        }
+        break;
+    case 'group-list':
+        ?>Selecione um grupo para administrar:<?php
+        ?><select id="group"><?php
+        $chats = $telegram->getContactList('Chat');
+        foreach($chats as $name) {
+            echo '<option value="'.md5($name).'">'.$name.'</option>';
+        }
+        ?></select><?php
+        break;
+    default:
+        break;
+}
 
 //}
 
