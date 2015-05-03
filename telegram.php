@@ -49,9 +49,11 @@ switch($action) {
         break;
     case 'user-list':
         $users = $telegram->getContactList();
+        asort($users);
         foreach($users as $name) {
             echo $name.
                 ' <a href="?action=edit-contact&contact='.base64_encode($name).'">edit</a>'.
+                ' <a href="?action=send-message&peer='.trim(base64_encode($name),'=').'">send message</a>'.
                 ' <a href="?action=del-contact&user='.base64_encode($name).'">del</a><br />';
         }
         break;
@@ -98,6 +100,7 @@ switch($action) {
         echo 'Nome: <input type="text" name="chat"><br />';
         ?>Usuários: <select id="users" name="users[]" multiple><?php
         $users = $telegram->getContactList('User');
+        asort($users);
         foreach($users as $name) {
             echo '<option value="'.$name.'">'.$name.'</option>';
         }
@@ -123,6 +126,7 @@ switch($action) {
         echo '<form method="post">';
         ?>Usuários: <select id="user" name="user" multiple><?php
         $users = $telegram->getContactList();
+        asort($users);
         foreach($users as $name) {
             echo '<option value="'.base64_encode($name).'">'.$name.'</option>';
         }
@@ -130,9 +134,17 @@ switch($action) {
         <br /><input type="submit">
         </form><?php
         $users = $telegram->chatInfo(base64_decode($_GET['group']));
-        foreach($users as $name) {
-            echo $name['name'].' invited by '.$name['by'].' at '.$name['at'].' '.($name['admin']?' ADMIN':'').'<br />';
+        foreach($users as $key => $name) {
+            $sort[$key] = $name['name'];
         }
+        asort($sort);
+        foreach($sort as $key => $name) {
+            echo $users[$key]['name'].' invited by '.$users[$key]['by'].' at '.$users[$key]['at'].' '.($users[$key]['admin']?' ADMIN':'').'<br />';
+        }
+        break;
+    case 'group-get-link':
+        echo 'Para invalidar este link, gere um novo link. <br />';
+        echo $telegram->exportChatLink(base64_decode($_GET['group']));
         break;
     case 'group-user-remove':
         if(isset($_GET['user'])) {
@@ -143,35 +155,41 @@ switch($action) {
         ?>Usuários:<br /><?php
         $users = $telegram->getContactList('User');
         $users = $telegram->chatInfo(base64_decode($_GET['group']));
-        foreach($users as $name) {
-            echo $name['name'].' invited by '.$name['by'].' at '.$name['at'].' '.
-                ($name['admin']?
+        foreach($users as $key => $name) {
+            $sort[$key] = $name['name'];
+        }
+        asort($sort);
+        foreach($sort as $key => $name) {
+            echo $users[$key]['name'].' invited by '.$users[$key]['by'].' at '.$users[$key]['at'].' '.
+                ($users[$key]['admin']?
                     :'<a href="?action=group-user-remove&group='.$_GET['group'].
-                        '&user='.base64_encode($name['name']).'">remove</a>'
+                        '&user='.base64_encode($users[$key]['name']).'">remove</a>'
                 ).'<br />';
         }
-        ?></select>
-        <br /><input type="submit">
+        ?><br /><input type="submit">
         </form><?php
         break;
     case 'group-list':
         $chats = $telegram->getDialogList();
+        asort($chats);
         foreach($chats as $name) {
             echo $name;
             echo ' <a href="?action=group-user-add&group='.trim(base64_encode($name),'=').'">add user</a> | ';
             echo '<a href="?action=group-user-remove&group='.trim(base64_encode($name),'=').'">remove user</a> | ';
+            echo '<a href="?action=group-get-link&group='.trim(base64_encode($name),'=').'">get link</a> | ';
+            echo '<a href="?action=send-message&peer='.trim(base64_encode($name),'=').'">send message</a> | ';
             echo '<a href="?action=group-rename&group='.trim(base64_encode($name),'=').'">rename group</a><br />';
         }
         break;
-    case 'group-list':
-        ?>Selecione um grupo para administrar:<?php
-        ?><select id="group"><?php
-        $chats = $telegram->getContactList('Chat');
-        foreach($chats as $name) {
-            echo '<option value="'.md5($name).'">'.$name.'</option>';
+    case 'send-message':
+        if(count($_POST)) {
+            $telegram->msg(base64_decode($_GET['peer']), $_POST['msg']);
         }
-        ?></select><?php
-        break;
+        echo '<form method="post">';
+        echo 'Destino: '.base64_decode($_GET['peer']).'<br />';
+        echo 'Mensagem: <textarea name="msg"></textarea>';
+        ?><br /><input type="submit">
+        </form><?php
     default:
         break;
 }

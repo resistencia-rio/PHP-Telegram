@@ -59,12 +59,17 @@ class Client extends \Zyberspace\Telegram\Cli\Client{
         foreach($users as $key => $user) {
             $users[$key] =$this->escapePeer($user);
         }
-        return $this->exec('create_group_chat ' . $this->escapePeer($chat) .
+        return $this->exec('create_group_chat ' . $this->escapeStringArgument($chat) .
             ' '  . \implode(' ', $users));
     }
 
     public function renameChat($current, $new)
     {
         return $this->exec('rename_chat ' . $this->escapePeer($current). ' ' . $this->escapeStringArgument($new));
+    }
+
+    public function exportChatLink($chat)
+    {
+        return $this->exec('export_chat_link ' . $this->escapePeer($chat));
     }
 }
