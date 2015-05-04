@@ -83,7 +83,9 @@ switch($action) {
         echo '<form method="post">';
         echo '<input type="hidden" name="contact" value="'.$_GET['contact'].'"><br />';
         $contact = base64_decode($_GET['contact']);
+        echo '<pre>';
         print_r($telegram->getUserInfo($contact));
+        echo '</pre>';
         $contact = array(
             substr($contact, 0, strpos($contact, ' ')),
             substr($contact, strpos($contact, ' '))
