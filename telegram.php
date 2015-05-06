@@ -198,7 +198,9 @@ switch($action) {
         </form><?php
     case 'global-search':
         if(count($_POST)) {
+            echo '<pre>';
             print_r($telegram->globalSearch($_POST['q']));
+            echo '</pre>';
         }
         echo '<form method="post">';
         echo 'Termo: <input type="text" name="q"><br />';
