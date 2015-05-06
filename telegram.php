@@ -42,7 +42,8 @@ height: 250px;
 <a href="?action=group-create">Criar grupo</a> |
 <a href="?action=group-list">Listar grupos</a> |
 <a href="?action=user-create">Adicionar contato</a> |
-<a href="?action=user-list">Listar contatos</a>
+<a href="?action=user-list">Listar contatos</a> |
+<a href="?action=global-search">Busca Global</a>
 <br />
 <?php
 switch($action) {
@@ -195,6 +196,15 @@ switch($action) {
         echo 'Mensagem: <textarea name="msg"></textarea>';
         ?><br /><input type="submit">
         </form><?php
+    case 'global-search':
+        if(count($_POST)) {
+            print_r($telegram->globalSearch($_POST['q']));
+        }
+        echo '<form method="post">';
+        echo 'Termo: <input type="text" name="q"><br />';
+        ?><input type="submit">
+        </form><?php
+        break;
     default:
         break;
 }

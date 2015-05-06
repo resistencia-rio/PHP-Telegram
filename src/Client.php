@@ -72,4 +72,9 @@ class Client extends \Zyberspace\Telegram\Cli\Client{
     {
         return $this->exec('export_chat_link ' . $this->escapePeer($chat));
     }
+
+    public function globalSearch($q)
+    {
+        return $this->exec('search * ' . $this->escapeStringArgument($q));
+    }
 }
