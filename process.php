@@ -5,5 +5,5 @@ do {
         pclose(popen($cmd, 'r'));
     }
     // micro second is one millionth of a second
-    usleep(50000);
+    usleep(1000000);
 } while (1);
