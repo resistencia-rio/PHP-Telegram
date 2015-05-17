@@ -148,6 +148,29 @@ switch($action) {
             echo $users[$key]['name'].' invited by '.$users[$key]['by'].' at '.$users[$key]['at'].' '.($users[$key]['admin']?' ADMIN':'').'<br />';
         }
         break;
+    case 'group-create-meeting':
+        if(count($_POST)) {
+            $users_for_add = $_POST['users'];
+            $users = $telegram->chatInfo(base64_decode($_GET['group']));
+            foreach($users as $key => $name) {
+                $telegram->chatDelUser(base64_decode($_GET['group']), $name);
+                $users_for_add[] = $name['name'];
+            }
+            $telegram->createGroupChat($_POST['chat'], $users_for_add);
+            return;
+        }
+        echo '<form method="post">';
+        echo 'Nome: <input type="text" name="chat" value="Sala de reunião"><br />';
+        ?>Usuários: <select id="users" name="users[]" multiple><?php
+        $users = $telegram->getContactList('User');
+        asort($users);
+        foreach($users as $name) {
+            echo '<option value="'.$name.'">'.$name.'</option>';
+        }
+        ?></select>
+        <br /><input type="submit">
+        </form><?php
+        break;
     case 'group-get-link':
         echo 'Para invalidar este link, gere um novo link. <br />';
         echo $telegram->exportChatLink(base64_decode($_GET['group']));
@@ -184,7 +207,8 @@ switch($action) {
             echo '<a href="?action=group-user-remove&group='.trim(base64_encode($name),'=').'">remove user</a> | ';
             echo '<a href="?action=group-get-link&group='.trim(base64_encode($name),'=').'">get link</a> | ';
             echo '<a href="?action=send-message&peer='.trim(base64_encode($name),'=').'">send message</a> | ';
-            echo '<a href="?action=group-rename&group='.trim(base64_encode($name),'=').'">rename group</a><br />';
+            echo '<a href="?action=group-rename&group='.trim(base64_encode($name),'=').'">rename group</a> | ';
+            echo '<a href="?action=group-create-meeting&group='.trim(base64_encode($name),'=').'">create meeting</a><br />';
         }
         break;
     case 'send-message':
