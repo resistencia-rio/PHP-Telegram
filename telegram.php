@@ -151,17 +151,29 @@ switch($action) {
     case 'group-create-meeting':
         if(count($_POST)) {
             $users_for_add = $_POST['users'];
-            $users = $telegram->chatInfo(base64_decode($_GET['group']));
-            foreach($users as $key => $name) {
-                $telegram->chatDelUser(base64_decode($_GET['group']), $name);
+            // add members new group
+            foreach($telegram->chatInfo(base64_decode($_GET['group'])) as $key => $name) {
                 $users_for_add[] = $name['name'];
             }
             $telegram->createGroupChat($_POST['chat'], $users_for_add);
+            // remove members old group
+            foreach($telegram->chatInfo($_GET['old']) as $key => $name) {
+                $telegram->chatDelUser($_GET['old'], $name);
+            }
+            echo 'Sala "'.$_POST['chat'].'" criada';
             return;
         }
         echo '<form method="post">';
-        echo 'Nome: <input type="text" name="chat" value="Sala de reunião"><br />';
-        ?>Usuários: <select id="users" name="users[]" multiple><?php
+        echo 'Nome: <input type="text" name="chat" value="'.'Sala de reunião - '.base64_decode($_GET['group']).'"><br />';
+
+        $chats = $telegram->getDialogList();
+        asort($chats);
+        echo 'Sala anterior: (Todos serão removidos da sala anterior)<br />';
+        foreach($chats as $name) {
+            echo ' <input type="radio" name="old" value='.$name.'">'.$name.'<br /> ';
+        }
+
+        ?>Usuários convidados: <select id="users" name="users[]" multiple><?php
         $users = $telegram->getContactList('User');
         asort($users);
         foreach($users as $name) {
