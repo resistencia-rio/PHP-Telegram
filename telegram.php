@@ -232,6 +232,7 @@ switch($action) {
         echo 'Mensagem: <textarea name="msg"></textarea>';
         ?><br /><input type="submit">
         </form><?php
+        break;
     case 'global-search':
         if(count($_POST)) {
             echo '<pre>';
