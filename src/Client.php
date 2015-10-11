@@ -14,7 +14,7 @@ class Client extends \Zyberspace\Telegram\Cli\Client{
      *
      * @see getUserInfo()
      */
-    public function getDialogListf($type = null) {
+    public function getDialogList($type = null) {
         $return = parent::getDialogList();
         if($type) {
             foreach($return as $key => $row) {
