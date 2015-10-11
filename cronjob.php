@@ -1,5 +1,5 @@
 i<?php
 $run = exec("ps -ef | grep 'process.php' | grep -v grep");
 if($run) return;
-$path = realpath(dirname(__FILE__));
-pclose(popen("php $path/process.php &", 'r'));
+$command = 'php '.__DIR__.'/process.php &';
+pclose(popen('php '.__DIR__.'/process.php &', 'r'));

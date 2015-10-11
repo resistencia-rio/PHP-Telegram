@@ -16,5 +16,8 @@
     },
     "require": {
         "zyberspace/telegram-cli-client": "dev-master"
+    },
+    "require-dev": {
+        "zyberspace/discovery-shell": "dev-master"
     }
 }
