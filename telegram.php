@@ -128,8 +128,18 @@ switch($action) {
         break;
     case 'group-user-add':
         if(count($_POST)) {
+            if($_POST['usernames']) {
+                $usernames = explode(' ', $_POST['usernames']);
+                foreach($usernames as $username) {
+                    $username = trim($username, '@');
+                    $user = $telegram->exec('resolve_username '.$telegram->escapePeer($username));
+                    if($user) {
+                        $_POST['user'][] = 'user#'.$user->id;
+                    }
+                }
+            }
             foreach($_POST['user'] as $user) {
-                if(!$telegram->chatAddUser('chat#'.$_GET['id'], $user)) {
+                if(!$telegram->chatAddUser('chat#'.$_GET['id'], $user, $forwardmessages)) {
                     var_dump(array(
                         'user' => $user,
                         'message' =>$telegram->getErrorMessage(),
@@ -146,7 +156,9 @@ switch($action) {
          foreach($users as $user) {
              echo '<option value="user#'.$user->id.'">'.$user->first_name.' '.$user->last_name.'</option>';
          }
-        ?></select><?php
+        ?></select><br /><?php
+        echo 'Usernames: <input type="text" name="usernames" /><br />';
+        echo 'Forward messages: <input type="text" name="forwardmessages" value="100" />';
         echo '<input type="submit"></form>';
         $chat = $telegram->chatInfo('chat#'.$_GET['id']);
         echo '<strong>Grupo:</strong> '.$chat->title.'<br />';
