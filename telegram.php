@@ -128,14 +128,23 @@ switch($action) {
         break;
     case 'group-user-add':
         if(count($_POST)) {
-            $telegram->chatAddUser(base64_decode($_GET['group']), base64_decode($_POST['user']));
+            foreach($_POST['user'] as $user) {
+                if(!$telegram->chatAddUser('chat#'.$_GET['id'], $user)) {
+                    var_dump(array(
+                        'user' => $user,
+                        'message' =>$telegram->getErrorMessage(),
+                        'code'=>$telegram->getErrorCode()
+                    ));
+                    break;
+                }
+            }
         }
         echo '<form method="post">';
-        ?>Usuários: <select id="user" name="user" multiple><?php
+        ?>Usuários: <select id="user" name="user[]" multiple><?php
          $users = $telegram->getContactList();
          usort($users, function($a,$b){return $a->print_name>$b->print_name;});
          foreach($users as $user) {
-             echo '<option value="'.$user->id.'">'.$user->first_name.' '.$user->last_name.'</option>';
+             echo '<option value="user#'.$user->id.'">'.$user->first_name.' '.$user->last_name.'</option>';
          }
         ?></select><?php
         echo '<input type="submit"></form>';
