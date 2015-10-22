@@ -15,7 +15,20 @@
 
 use PhpTelegram\Client;
 require('vendor/autoload.php');
-$telegram = new Client('tcp://localhost:2015');
+require 'config.php';
+try {
+    if($config['telegram.cli']['tcp-port']) {
+        $remoteSocket = 'tcp://localhost:'.$config['telegram.cli']['tcp-port'];
+    } elseif($config['telegram.cli']['udp-socket']) {
+        $remoteSocket = 'unix://'.$config['telegram.cli']['udp-socket'];
+    } else {
+        throw new Exception('Inform the type of connection (tcp || socket)');
+    }
+    $telegram = new Client($remoteSocket);
+} catch(Exception $e) {
+    echo $e->getMessage();
+    die();
+}
 
 $action = $_GET['action'];
 
