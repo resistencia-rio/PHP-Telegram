@@ -18,7 +18,7 @@ class Client extends \Zyberspace\Telegram\Cli\Client{
         $return = parent::getDialogList();
         if($type) {
             foreach($return as $key => $row) {
-                if($row->type != $type) {
+                if($row->peer_type != $type) {
                     unset($return[$key]);
                 }
             }

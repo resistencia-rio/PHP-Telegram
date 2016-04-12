@@ -67,21 +67,38 @@ switch($action) {
         break;
     case 'user-list':
         $users = $telegram->getContactList();
-        usort($users, function($a,$b){return $a->print_name>$b->print_name;});
+        usort($users, function($a,$b){return $a->print_name > $b->print_name;});
         echo '<table border="1">';
-        echo "<thead><tr><th>first name</th><th>last name</th><th>phone</th><th>username</th><th>edit</th><th>msg</th><th>del</th></tr></thead>";
+        echo "<thead><tr><th>first name</th><th>last name</th><th>phone</th><th>username</th><th>edit</th><th>msg</th><th>del</th><th>rm group</th></tr></thead>";
         foreach($users as $user) {
             echo '<tr>';
             echo "<td>$user->first_name</td>";
             echo "<td>$user->last_name</td>";
             echo "<td>$user->phone</td>";
             echo "<td>$user->username</td>";
-            echo '<td><a href="?action=edit-contact&id='.$user->id.'"">edit</a></td>';
-            echo '<td><a href="?action=send-message&type='.$user->type.'&id='.$user->id.'">msg</a></td>';
-            echo '<td><a href="?action=del-contact&id='.$user->id.'">del</a></td>';
+            echo '<td><a href="?action=edit-contact&id='.$user->peer_id.'"">edit</a></td>';
+            echo '<td><a href="?action=send-message&type='.$user->type.'&id='.$user->peer_id.'">msg</a></td>';
+            echo '<td><a href="?action=del-contact&id='.$user->peer_id.'">del</a></td>';
+            echo '<td><a href="?action=remove-from-groups&id='.$user->peer_id.'">rm group</a></td>';
             echo '</tr>';
         }
         echo '</table>';
+        break;
+    case 'remove-from-groups':
+        $chats = $telegram->getDialogList('chat');
+        $filtered = array_filter($chats, function($v, $k) use ($telegram) {
+            $chat = $telegram->chatInfo('chat#'.$v->peer_id);
+            $filtered = array_filter($chat->members, function($v, $k) {
+                return $v->peer_id == $_GET['id'];
+            }, ARRAY_FILTER_USE_BOTH);
+            return $filtered ? true : false;
+        }, ARRAY_FILTER_USE_BOTH);
+        usort($filtered, function($a,$b){return $a->title > $b->title;});
+        foreach($filtered as $chat) {
+            echo $chat->title . ' <a href="?action=group-user-remove' .
+                '&id='.$chat->peer_id.
+                '&user='.$_GET['id'].'">remove</a><br />';
+        }
         break;
     case 'user-create':
         if(count($_POST)) {
@@ -125,7 +142,7 @@ switch($action) {
         $users = $telegram->getContactList();
         usort($users, function($a,$b){return $a->print_name>$b->print_name;});
         foreach($users as $user) {
-            echo '<option value="user#'.$user->id.'">'.$user->first_name.$user->last_name.'</option>';
+            echo '<option value="user#'.$user->peer_id.'">'.$user->first_name.$user->last_name.'</option>';
         }
         ?></select><?php
         echo '<input type="submit"></form>';
@@ -147,7 +164,7 @@ switch($action) {
                     $username = trim($username, '@');
                     $user = $telegram->exec('resolve_username '.$telegram->escapePeer($username));
                     if($user) {
-                        $_POST['user'][] = 'user#'.$user->id;
+                        $_POST['user'][] = 'user#'.$user->peer_id;
                     }
                 }
             }
@@ -167,7 +184,7 @@ switch($action) {
          $users = $telegram->getContactList();
          usort($users, function($a,$b){return $a->print_name>$b->print_name;});
          foreach($users as $user) {
-             echo '<option value="user#'.$user->id.'">'.$user->first_name.' '.$user->last_name.'</option>';
+             echo '<option value="user#'.$user->peer_id.'">'.$user->first_name.' '.$user->last_name.'</option>';
          }
         ?></select><br /><?php
         echo 'Usernames: <input type="text" name="usernames" /><br />';
@@ -197,13 +214,13 @@ switch($action) {
             $users_for_add = $_POST['users'];
             // add members new group
             foreach($originalChat->members as $key => $user) {
-                $users_for_add[] = 'user#'.$user->id;
+                $users_for_add[] = 'user#'.$user->peer_id;
             }
             $users_for_add = array_unique($users_for_add);
             $telegram->createGroupChat($_POST['chat'], $users_for_add);
             // remove members old group
             foreach($telegram->chatInfo('chat#'.$_POST['old'])->members as $user) {
-                $telegram->chatDeleteUser('chat#'.$_POST['old'], 'user#'.$user->id);
+                $telegram->chatDeleteUser('chat#'.$_POST['old'], 'user#'.$user->peer_id);
             }
             echo 'Sala "'.$_POST['chat'].'" criada';
             return;
@@ -215,14 +232,14 @@ switch($action) {
         usort($chats, function($a,$b){return $a->title>$b->title;});
         echo 'Sala anterior: (Todos serão removidos da sala anterior)<br />';
         foreach($chats as $chat) {
-            echo ' <input type="radio" name="old" value="'.$chat->id.'">'.$chat->title.'<br /> ';
+            echo ' <input type="radio" name="old" value="'.$chat->peer_id.'">'.$chat->title.'<br /> ';
         }
 
         ?>Usuários convidados: <select id="users" name="users[]" multiple><?php
         $users = $telegram->getContactList();
         asort($users);
         foreach($users as $user) {
-            echo '<option value="user#'.$user->id.'">'.$user->first_name.' '.$user->last_name.'</option>';
+            echo '<option value="user#'.$user->peer_id.'">'.$user->first_name.' '.$user->last_name.'</option>';
         }
         ?></select><br /><?php
         echo '<input type="submit"></form>';
@@ -252,9 +269,9 @@ switch($action) {
             echo "<td>$user->username</td>";
             echo "<td>{$user->inviter->first_name} {$user->inviter->last_name}</td>";
             echo '<td>';
-                if($chat->inviter->id == $me->id || $chat->admin->id == $me->id || $user->id == $me->id) {
+                if($chat->inviter->peer_id == $me->peer_id || $chat->admin->peer_id == $me->peer_id || $user->peer_id == $me->peer_id) {
                     echo '<a href="?action=group-user-remove&id='.$_GET['id'].
-                            '&user='.$user->id.'">remove</a>';
+                            '&user='.$user->peer_id.'">remove</a>';
                 }
             echo '</td>';
             echo '</tr>';
@@ -268,15 +285,15 @@ switch($action) {
         echo '<thead><tr><th>id</th><th>title</th><th>members</th><th colspan="6">commands</th></tr></thead>';
         foreach($chats as $chat) {
             echo '<tr>';
-            echo "<td>$chat->id</td>";
+            echo "<td>$chat->peer_id</td>";
             echo "<td>$chat->title</td>";
             echo "<td>$chat->members_num</td>";
-            echo '<td><a href="?action=group-user-add&id='.$chat->id.'">add user</a></td>';
-            echo '<td><a href="?action=group-user-remove&id='.$chat->id.'">remove user</a></td>';
-            echo '<td><a href="?action=group-get-link&id='.$chat->id.'">get link</a></td>';
-            echo '<td><a href="?action=send-message&type='.$chat->type.'&id='.$chat->id.'">send message</a></td>';
-            echo '<td><a href="?action=group-rename&id='.$chat->id.'">rename group</a></td>';
-            echo '<td><a href="?action=group-create-meeting&id='.$chat->id.'">create meeting</a></td>';
+            echo '<td><a href="?action=group-user-add&id='.$chat->peer_id.'">add user</a></td>';
+            echo '<td><a href="?action=group-user-remove&id='.$chat->peer_id.'">remove user</a></td>';
+            echo '<td><a href="?action=group-get-link&id='.$chat->peer_id.'">get link</a></td>';
+            echo '<td><a href="?action=send-message&type='.$chat->type.'&id='.$chat->peer_id.'">send message</a></td>';
+            echo '<td><a href="?action=group-rename&id='.$chat->peer_id.'">rename group</a></td>';
+            echo '<td><a href="?action=group-create-meeting&id='.$chat->peer_id.'">create meeting</a></td>';
             echo '</tr>';
         }
         echo '</table>';
