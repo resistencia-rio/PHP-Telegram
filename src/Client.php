@@ -71,4 +71,14 @@ class Client extends \Zyberspace\Telegram\Cli\Client{
     {
         return $this->exec('search '.$this->escapePeer($local).' ' . $this->escapeStringArgument($q));
     }
+    
+    /**
+     * Delete a message
+     * 
+     * @param string $message_id
+     */
+    public function deleteMsg($message_id)
+    {
+        return $this->exec('delete_msg '.$message_id);
+    }
 }
