@@ -30,7 +30,7 @@ try {
     die();
 }
 
-$action = $_GET['action'];
+$action = @$_GET['action'];
 
 ?><html>
 <head>

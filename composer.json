@@ -15,9 +15,19 @@
         }
     },
     "require": {
-        "zyberspace/telegram-cli-client": "dev-master"
+        "vitormattos/telegram-cli-client": "dev-master"
     },
     "require-dev": {
         "zyberspace/discovery-shell": "dev-master"
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/vitormattos/php-discovery-shell"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/vitormattos/php-telegram-cli-client"
+        }
+    ]
 }
