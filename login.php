@@ -15,6 +15,7 @@ try {
 }
 
 if($MadelineProto === false) {
+    $MadelineProto = new \danog\MadelineProto\API($settings);
     $checkedPhone = $MadelineProto->auth->checkPhone([// auth.checkPhone becomes auth->checkPhone
         'phone_number'     => getenv('MTPROTO_NUMBER'),
     ]);
