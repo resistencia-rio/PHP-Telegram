@@ -15,7 +15,9 @@
         }
     },
     "require": {
-        "vitormattos/telegram-cli-client": "dev-master"
+        "vitormattos/telegram-cli-client": "dev-master",
+        "phpseclib/phpseclib": "dev-master#200c2a9",
+        "danog/madelineproto": "dev-master"
     },
     "require-dev": {
         "zyberspace/discovery-shell": "dev-master"

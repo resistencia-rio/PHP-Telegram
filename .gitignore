@@ -9,3 +9,9 @@
 
 # VI
 *.swp
+
+# Environment files
+.env
+
+# Session file
+session.madeline
